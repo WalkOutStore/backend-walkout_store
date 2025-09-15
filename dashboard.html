@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WalkOut Store - لوحة التحكم الأمنية</title>
+    <style>
+        body { 
+            font-family: 'Arial', sans-serif; 
+            background-color: #f0f2f5; 
+            margin: 0; 
+            padding: 20px; 
+            text-align: right;
+        }
+        h1 { 
+            color: #1A237E; 
+        }
+        #alert-box {
+            display: none;
+            padding: 40px;
+            margin-top: 20px;
+            border-radius: 15px;
+            background-color: #ff4d4d;
+            color: white;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        #alert-box h2 { 
+            margin-top: 0; 
+            font-size: 48px; 
+        }
+        #alert-box p { 
+            font-size: 24px; 
+        }
+    </style>
+</head>
+<body>
+
+    <h1>WalkOut Store - تنبيهات أمنية مباشرة</h1>
+    <hr>
+    <div id="status" style="font-weight: bold;">جاري الاتصال بالخادم...</div>
+
+    <div id="alert-box">
+        <h2 id="alert-title">🚨 تنبيه أمني! 🚨</h2>
+        <p id="alert-details"></p>
+    </div>
+
+    <audio id="alarm-sound" src="https://www.soundjay.com/buttons/beep-01a.mp3" preload="auto"></audio>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const alertBox = document.getElementById('alert-box');
+        const alertDetails = document.getElementById('alert-details');
+        const alarmSound = document.getElementById('alarm-sound');
+        
+        // --- هذا هو التعديل الأهم ---
+        // استخدام عنوان الخادم الحقيقي مع بروتوكول WebSocket الآمن (wss)
+        const ws = new WebSocket("wss://walkout-production.up.railway.app/ws/alerts");
+
+        ws.onopen = function(event) {
+            statusDiv.textContent = "✅ متصل بقناة التنبيهات الأمنية";
+            statusDiv.style.color = "green";
+        };
+
+        ws.onmessage = function(event) {
+            console.log("Alert received:", event.data);
+            const alertData = JSON.parse(event.data);
+
+            if (alertData.type === "TAILGATING_ALERT") {
+                // 1. عرض رسالة الإنذار
+                alertDetails.innerHTML = `تم اكتشاف تسلل عند البوابة!<br>الجلسة المرتبطة: <strong>${alertData.sessionId || 'N/A'}</strong>`;
+                alertBox.style.display = 'block';
+
+                // 2. تشغيل صوت الإنذار
+                alarmSound.play();
+
+                // 3. إخفاء الإنذار بعد 10 ثوانٍ
+                setTimeout(() => {
+                    alertBox.style.display = 'none';
+                }, 10000);
+            }
+        };
+
+        ws.onclose = function(event) {
+            statusDiv.textContent = "❌ انقطع الاتصال بالخادم. جاري محاولة إعادة الاتصال...";
+            statusDiv.style.color = "red";
+        };
+
+        ws.onerror = function(event) {
+            statusDiv.textContent = "❌ خطأ في الاتصال!";
+            statusDiv.style.color = "red";
+        };
+    </script>
+
+</body>
+</html>
