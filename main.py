@@ -17,7 +17,11 @@ from datetime import datetime, timedelta
 import uuid
 from jose import jwt, JWTError
 import os
+from database import Base, engine
+import models
 
+
+Base.metadata.create_all(bind=engine)
 # لا نستخدم load_dotenv() أبداً
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
@@ -352,9 +356,5 @@ async def report_tailgating_alert(db: Session = Depends(database.get_db)):
     await alert_manager.broadcast_alert(alert_payload)
 
     return {"message": "Alert logged and broadcasted successfully."}
-    from database import Base, engine
-import models
 
-
-Base.metadata.create_all(bind=engine)
 
