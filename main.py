@@ -352,3 +352,9 @@ async def report_tailgating_alert(db: Session = Depends(database.get_db)):
     await alert_manager.broadcast_alert(alert_payload)
 
     return {"message": "Alert logged and broadcasted successfully."}
+    from database import Base, engine
+import models
+
+
+Base.metadata.create_all(bind=engine)
+
